@@ -8,6 +8,8 @@ import {VitePWA} from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+      base:"/roulette/",
+
     plugins: [vue(),
         VitePWA({
             registerType: 'autoUpdate', includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],

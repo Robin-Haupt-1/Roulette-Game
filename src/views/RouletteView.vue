@@ -1,249 +1,201 @@
-<script setup>
+<script setup lang="ts">
 /* eslint-disable prettier/prettier */
 import {reactive, ref, computed, onMounted} from "vue";
-import anime from "animejs";
-import {map, zip, fromEvent, pipe, withLatestFrom} from "@/Observable";
+import RouletteWheel from '../components/RouletteWheel.vue'
 
-onMounted(() => {
-  window.anime = anime;
+let rouletteWheel = ref()
+let chip = ref()
+let table = ref()
+let previousX = 0
+let currentX = 0
+let previousY = 0
+let currentY = 0
+let currentlyDrawingLine = false;
+let leftCanvasWhileDrawing = false
+let anythingDrawn = false
 
-  var currentBallRotation = 0;
-  var currentWheelRotation = 0;
-  var currentWheelIndex = 0;
-  var isRotating = false;
-  const rouletteWheelNumbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10,
-    5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+let chipHeight = 15
+let chipWidth = 15
+let borderZoneWidth = 10
+let numberCellWidth = 39.6
+let numberCellHeight = 55
 
-  const getRouletteWheelNumber = index =>
-      rouletteWheelNumbers[index >= 0 ? index % 37 : 37 - Math.abs(index % 37)];
+function findChipPosition(left: number, top: number) {
+// make sure cursor is on any number field
 
-  const getRouletteWheelColor = index => {
-    const i = index >= 0 ? index % 37 : 37 - Math.abs(index % 37);
-    return i == 0 ? "green" : i % 2 == 0 ? "black" : "red";
-  };
+  let newPosition = {left: -100, top: -100}
+  if (left > 130 && left < 593 && top > 65 && top < 218) { // real left:122- 597, top:56- 222
+    console.log("on numbers")
 
-  window.rouletteWheelNumbers = rouletteWheelNumbers;
+    // get left position
+    newPosition = {left: 0, top: 0}
+    let cellX = Math.floor(left / numberCellWidth)
+    let remainderX = left % numberCellWidth
+    let onVerticalBar = remainderX < borderZoneWidth
+    console.log("Remainder X: " + remainderX)
+    newPosition.left = cellX * numberCellWidth + (onVerticalBar ? 0 : chipWidth)
 
-  function addFlipper() {
-    const mkDiv = className => {
-      const d = document.createElement("div");
-      d.classList.add(...className.split(" "));
-      return d;
-    };
-    const flipper = mkDiv("flipper");
-    const front = mkDiv("front-face");
-    const back = mkDiv("back-face");
-    flipper.appendChild(front);
-    flipper.appendChild(back);
-    document.querySelector(".result").appendChild(flipper);
-    return (number, color) => {
-      flipper.classList.add("flip", color);
-      back.innerText = number;
-    };
-  }
+    // get top position
+    let cellY = Math.floor(top / numberCellHeight)
+    let remainderY = top % numberCellHeight
+    let onHorizontalBar = cellY === 0 ? false : remainderY < borderZoneWidth
+    console.log("Remainder Y: " + remainderY)
 
-  function startRotation(speed) {
-    if (isRotating) {
-      return;
-    }
+    let onCross = onHorizontalBar && onVerticalBar
+    if (onCross) {
+      newPosition.left = cellX * numberCellWidth + (onVerticalBar ? 0 : onHorizontalBar ? numberCellWidth / 2 : chipWidth)
+      newPosition.top = cellY * numberCellHeight + (onHorizontalBar ? 0 : numberCellHeight - chipHeight / 2)
 
-    isRotating = true;
+    } else {
+      // get left position
+      newPosition.left = cellX * numberCellWidth
+      if (onVerticalBar) {
 
-    const writeResult = addFlipper();
+      } else {
 
-    const bezier = [0.165, 0.84, 0.44, 1.005];
-
-    const newWheelIndex = currentWheelIndex - speed;
-    const result = getRouletteWheelNumber(newWheelIndex);
-    const resultColor = getRouletteWheelColor(newWheelIndex);
-    (() => {
-      const newRotation = currentWheelRotation + (360 / 37) * speed;
-      console.log(getRouletteWheelNumber(currentWheelIndex), "---> ", result);
-      var myAnimation = anime({
-        targets: [".layer-2", ".layer-4"],
-        rotate: function () {
-          return newRotation;
-        },
-        duration: function () {
-          return 5000;
-        },
-        loop: 1,
-        // easing: "cubicBezier(0.010, 0.990, 0.855, 1.010)",
-        easing: `cubicBezier(${bezier.join(",")})`,
-        // easing: "cubicBezier(0.000, 1.175, 0.980, 0.990)",
-        complete: (...args) => {
-          currentWheelRotation = newRotation;
-          currentWheelIndex = newWheelIndex;
+        if (onHorizontalBar) {
+          newPosition.left += numberCellWidth / 2
+        } else {
+          newPosition.left += chipWidth
         }
-      });
-    })();
+      }
+      // get top position
 
-    (() => {
-      const newRotation = -4 * 360 + currentBallRotation;
-      console.log("newRotation", newRotation);
-      var myAnimation1 = anime({
-        targets: ".ball-container",
-        translateY: [
-          {value: 0, duration: 0},
-          {value: 20, duration: 3000},
-          {value: 25, duration: 900},
-          {value: 50, duration: 1000}
-        ],
-        rotate: [{value: newRotation, duration: 4000}],
-        duration: function () {
-          return 4000; // anime.random(800, 1400);
-        },
-        loop: 1,
-        easing: `cubicBezier(${bezier.join(",")})`,
-        complete: () => {
-          currentBallRotation = newRotation;
-          writeResult(result, resultColor);
-          isRotating = false;
+      newPosition.top = cellY * numberCellHeight
+      if (onHorizontalBar) {
+
+      } else {
+        if (onVerticalBar) {
+          newPosition.top += numberCellHeight / 2
+
+        } else {
+          newPosition.top += numberCellHeight - chipHeight / 1.5
+
         }
-      });
-    })();
-  }
-
-  function offsetEl(el) {
-    var rect = el.getBoundingClientRect(),
-        scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
-        scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    return {
-      top: rect.top + scrollTop,
-      left: rect.left + scrollLeft,
-      width: rect.width,
-      height: rect.height
-    };
-  }
-
-  function isInBoundaryEl(el, x, y) {
-    const o = offsetEl(el);
-    return (
-        x >= o.left && x <= o.left + o.width && y >= o.top && y <= o.top + o.height
-    );
-  }
-
-  function isInRadiusEl(el, x, y) {
-    const o = offsetEl(el);
-    const cx = o.left + o.width / 2;
-    const cy = o.top + o.height / 2;
-    const dx = x - cx;
-    const dy = y - cy;
-    const r = o.width / 2;
-    return Math.pow(dx, 2) + Math.pow(dy, 2) <= Math.pow(r, 2);
-  }
-
-  const documentEvent = eventName =>
-      pipe(
-          fromEvent(document, eventName),
-          map(e =>
-              e.type == "touchstart" || e.type == "touchmove"
-                  ? {x: e.touches[0].clientX, y: e.touches[0].clientY}
-                  : {x: e.clientX, y: e.clientY}
-          )
-      );
-
-  const tryRotate = ([p0, p1]) => {
-    const w = document.querySelector(".layer-2.wheel");
-    if (isInRadiusEl(w, p0.x, p0.y)) {
-      const d = Math.round(
-          Math.sqrt(Math.pow(p0.x - p1.x, 2) + Math.pow(p0.y - p1.y, 2)) / 4
-      );
-      if (Math.abs(d) > 3) {
-        window.startRotation(d);
       }
     }
-  };
 
-  zip(documentEvent("mousedown"))(documentEvent("mouseup")).subscribe({
-    next: tryRotate
-  });
+  }
+  return newPosition
+}
 
-  zip(documentEvent("touchstart"))(
-      pipe(
-          withLatestFrom(documentEvent("touchmove"))(fromEvent(document, "touchend")),
-          map(([_, r]) => r)
-      )
-  ).subscribe({
-    next: tryRotate
-  });
 
-  pipe(
-      withLatestFrom(documentEvent("touchmove"))(fromEvent(document, "touchend")),
-      map(([_, r]) => r)
-  ).subscribe({
-    next: e => console.log(e)
-  });
+onMounted(() => {
 
-  document.querySelector(".roulette-wheel").addEventListener(
-      "touchmove",
-      e => {
-        e.preventDefault();
-      },
-      {passive: false}
-  );
-
-  window.startRotation = startRotation;
 })
+
+function processDrawEvent(res: string, e: MouseEvent) {
+  previousX = currentX;
+  previousY = currentY;
+  currentX = e.clientX - table.value.getBoundingClientRect().x
+  currentY = e.clientY - table.value.getBoundingClientRect().y
+  if (res === 'down') {
+    currentlyDrawingLine = true;
+    let shouldDrawDot = true;
+
+  }
+
+  if (res === 'up') {
+    currentlyDrawingLine = false;
+    leftCanvasWhileDrawing = false
+
+  }
+
+  if (res === 'leave') {
+    if (currentlyDrawingLine) leftCanvasWhileDrawing = true
+    currentlyDrawingLine = false
+  }
+
+  if (res === "enter") {
+    if (leftCanvasWhileDrawing) {
+      previousX = currentX
+      previousY = currentY
+      currentlyDrawingLine = true
+    }
+  }
+
+  if (res === 'move') {
+    console.log("move")
+    if (currentlyDrawingLine) {
+    }
+    console.log(`X:${currentX}, Y:${currentY}`)
+    let chipPosition = findChipPosition(currentX, currentY)
+    console.log(chipPosition)
+    chip.value.style.top = chipPosition.top + "px"
+    chip.value.style.left = chipPosition.left + "px"
+
+
+  }
+}
+
+function consolelog(m: string) {
+  console.log(m)
+}
 </script>
 
 <template>
-  <div>
-    <div class="result"><span class="test">sdfsd</span></div>
-
-    <h2>Roulette Game</h2>
-    <h3></h3>
-    <div>
-      <div class="roulette-wheel">
-        <div class="layer-2 wheel" style="transform: rotate(0deg);"></div>
-        <div class="layer-3"></div>
-        <div class="layer-4 wheel" style="transform: rotate(0deg);"></div>
-        <div class="layer-5"></div>
-        <div class="ball-container" style="transform: rotate(0deg);">
-          <div
-              class="ball"
-              style="transform: translate(0, -163.221px);"
-          ></div>
-        </div>
-        <svg width="380" height="380">
-          <circle
-              cx="190"
-              cy="190"
-              r="190"
-              style="touch-action: none;"
-          ></circle>
-        </svg>
-      </div>
+  <div id="all">
+    <RouletteWheel ref="rouletteWheel" @resultVisible="consolelog"/>
+    <button @click="  rouletteWheel.doRotate()">Spin!</button>
+    <div ref="table" id="table_and_chip"
+         @mouseenter="(e)=>{processDrawEvent('enter', e)}"
+         @mousemove="(e)=>{processDrawEvent('move', e)}"
+         @mouseleave="(e)=>{processDrawEvent('leave', e)}"
+         @mousedown="(e)=>{processDrawEvent('down', e)}">
+      <div id="table_div"><img id="table" src="/roulette-table.jpg"/></div>
+      <div id="chip" ref="chip"><img src="/chip.png"/></div>
     </div>
   </div>
 </template>
 
 <style lang="scss">
 
+#all {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3rem;
+  font-weight: normal;
+}
+
+#table_and_chip {
+  position: relative;
+}
+
+img#table {
+  position: absolute;
+  top: 0;
+
+  left: 0;
+  z-index: -2;
+}
+
+
+div#chip {
+
+  transition: top 0.2s ease,
+              left 0.2s ease;
+  position: absolute;
+  border-radius: 10px;
+
+  height: 15px;
+  width: 15px;
+
+  top: 20px;
+
+  left: 20px;
+
+  img {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    height: 100%;
+    width: 100%;
+  }
+}
+
+
 body {
   background-color: white;
 }
 
-$title: 'This is title';
-.post__title {
-  content: quote($title);
-}
-
-@function double($variable) {
-  @return $variable *6;
-}
-
-.post {
-  font-size: double(2px);
-}
-
-.result {
-  height: 100px;
-  width: 100px;
-
-  .test {
-    color: green;
-    font-size: double(10px);
-  }
-}
 </style>
