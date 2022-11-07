@@ -4,7 +4,7 @@ import {reactive, ref, computed, onMounted} from "vue";
 import anime from "animejs";
 import '../assets/flipper.scss'
 
-import {map, zip, fromEvent, pipe, withLatestFrom} from "@/Observable";
+import {map, zip, fromEvent, pipe, withLatestFrom} from "../Observable.js";
 
 let emit = defineEmits(["resultVisible"])
 

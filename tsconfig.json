@@ -1,16 +1,31 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.web.json",
-  "include": ["env.d.ts", "src/**/*.ts", "src/**/*.vue"],
   "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "/@/*": ["src/*"]
+    },
+    "lib": ["ESNext", "DOM", "WebWorker"]
   },
-
-  "references": [
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "test",
+    "test.ts",
+    "**/*.spec.ts",
+    "**/*.worker.ts"
+  ],
+  "plugins": [
     {
-      "path": "./tsconfig.config.json"
+      "name": "@vuedx/typescript-plugin-vue"
     }
   ]
 }
