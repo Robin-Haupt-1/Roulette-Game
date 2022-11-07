@@ -2,6 +2,8 @@
 /* eslint-disable prettier/prettier */
 import {reactive, ref, computed, onMounted} from "vue";
 import anime from "animejs";
+import '../assets/flipper.scss'
+
 import {map, zip, fromEvent, pipe, withLatestFrom} from "@/Observable";
 
 let emit = defineEmits(["resultVisible"])
@@ -26,23 +28,6 @@ onMounted(() => {
 
   window.rouletteWheelNumbers = rouletteWheelNumbers;
 
-  function addFlipper() {
-    const mkDiv = className => {
-      const d = document.createElement("div");
-      d.classList.add(...className.split(" "));
-      return d;
-    };
-    const flipper = mkDiv("flipper");
-    const front = mkDiv("front-face");
-    const back = mkDiv("back-face");
-    flipper.appendChild(front);
-    flipper.appendChild(back);
-    document.querySelector(".result").appendChild(flipper);
-    return (number, color) => {
-      flipper.classList.add("flip", color);
-      back.innerText = number;
-    };
-  }
 
   function startRotation(speed) {
     if (isRotating) {
@@ -51,7 +36,6 @@ onMounted(() => {
 
     isRotating = true;
 
-    const writeResult = addFlipper();
 
     const bezier = [0.165, 0.84, 0.44, 1.005];
 
@@ -98,7 +82,6 @@ onMounted(() => {
         easing: `cubicBezier(${bezier.join(",")})`,
         complete: () => {
           currentBallRotation = newRotation;
-          writeResult(result, resultColor);
           emit("resultVisible", {number: result, color: resultColor})
           isRotating = false;
         }
@@ -199,11 +182,11 @@ defineExpose({doRotate})
 
 <template>
   <div>
-    <div class="result"><span class="test">sdfsd</span></div>
 
-    <h2>Roulette Game</h2>
+    <h2></h2>
     <h3></h3>
-    <div>
+    <div id="container">
+
       <div class="roulette-wheel">
         <div class="layer-2 wheel" style="transform: rotate(0deg);"></div>
         <div class="layer-3"></div>
@@ -235,10 +218,114 @@ body {
 
 }
 
+div#container {
+  position: relative;
+}
 
 .result {
   height: 100px;
   width: 100px;
 
 }
+
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+}
+
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: sans-serif;
+  background-image: url(../assets/felt.png), -webkit-radial-gradient(50% 40%, circle farthest-corner, #527c14, #243a0a);
+  background-size: 180px 180px, auto;
+  background-attachment: fixed;
+  user-select: none;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  // overflow: hidden;
+  contain: layout style;
+  overflow: visible;
+}
+
+.roulette-wheel {
+  width: 380px;
+  height: 380px;
+  border-radius: 100%;
+  background: url(../assets/roulette_1.jpg);
+  background-size: 380px 380px;
+  shape-outside: circle(190px);
+  margin: 0 0 1em 1em;
+  box-shadow: 2px 10px 30px rgba(0, 0, 0, .4);
+  position: relative;
+  touch-action: none;
+  overflow: visible;
+}
+
+.roulette-wheel .layer-2, .roulette-wheel .layer-3, .roulette-wheel .layer-4, .roulette-wheel .layer-5, .ball-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: 380px 380px
+}
+
+.roulette-wheel .layer-2, .roulette-wheel .layer-4, .ball-container {
+  will-change: transform
+}
+
+.roulette-wheel .layer-2 {
+  background-image: url(../assets/roulette_2.png)
+}
+
+.roulette-wheel .layer-3 {
+  background-image: url(../assets/roulette_3.png)
+}
+
+.roulette-wheel .layer-4 {
+  background-image: url(../assets/roulette_4.png);
+}
+
+.roulette-wheel .layer-5 {
+  background-image: url(../assets/roulette_5.png);
+}
+
+.roulette-wheel svg {
+  position: absolute;
+  top: 0;
+  left: 0
+}
+
+.roulette-wheel circle {
+  cursor: pointer;
+  fill: transparent;
+}
+
+.roulette-wheel .ball {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: #fff radial-gradient(circle at 5px 5px, #fff, #444);
+  box-shadow: 1px 1px 4px #000;
+  transform: translateY(-116px);
+  top: 50%;
+  left: 50%;
+  margin: -7px;
+  will-change: transform;
+}
+
 </style>
