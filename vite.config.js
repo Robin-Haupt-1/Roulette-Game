@@ -12,7 +12,7 @@ export default defineConfig({
       base: "/",
       srcDir: "src",
       filename: "sw.ts",
-      includeAssets: ["/favicon.png"],
+      includeAssets: ["/*.*"],
       strategies: "injectManifest",
       manifest: {
         name: "Roulette App",
