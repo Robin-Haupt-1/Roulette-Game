@@ -140,27 +140,6 @@ onMounted(() => {
       }
     }
   };
-
-  //zip(documentEvent("mousedown"))(documentEvent("mouseup")).subscribe({
-  //  next: tryRotate
-  //});
-
-  zip(documentEvent("touchstart"))(
-      pipe(
-          withLatestFrom(documentEvent("touchmove"))(fromEvent(document, "touchend")),
-          map(([_, r]) => r)
-      )
-  ).subscribe({
-    next: tryRotate
-  });
-
-  pipe(
-      withLatestFrom(documentEvent("touchmove"))(fromEvent(document, "touchend")),
-      map(([_, r]) => r)
-  ).subscribe({
-    next: e => console.log(e)
-  });
-
   document.querySelector(".roulette-wheel").addEventListener(
       "touchmove",
       e => {
