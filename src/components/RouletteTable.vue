@@ -116,15 +116,9 @@ function processMouseEvent(res: string, e: MouseEvent) {
   previousY = currentY;
   currentX = e.clientX - table.value.getBoundingClientRect().x
   currentY = e.clientY - table.value.getBoundingClientRect().y
-  if (res === 'down') {
-    currentlyDrawingLine = true;
-    let shouldDrawDot = true;
 
-  }
   if (res === 'click') {
     chipIsPlaced = true
-    currentlyDrawingLine = true;
-    let shouldDrawDot = true;
     chipPlacedPosition = {top: chip.value.style.top, left: chip.value.style.left}
     placedchip.value.style.display = "block"
     placedchip.value.style.top = chip.value.style.top
