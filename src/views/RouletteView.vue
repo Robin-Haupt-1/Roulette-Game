@@ -95,7 +95,10 @@ function betPlaced(newNumbers: number[]) {
   betPayout.value = betTypePayout[newNumbers.length] + " : 1"
 }
 
-function clearAllData() {
+function deleteData() {
+  localStorage.setItem("currentFunds","10000")
+  localStorage.setItem("pastBets","[]")
+location.reload();
 
 }
 
@@ -110,7 +113,8 @@ function clearAllData() {
 
     <div id="currentfunds">
       <h1 class="flex-center">Current Funds</h1>
-      <h2 class="flex-center">{{ currentFunds }} $</h2>
+      <h2 class="flex-center">{{ currentFunds }} $</h2><br>
+      <a  href="#" class="flex-center" @click="deleteData">Delete data</a>
     </div>
     <div id="bet">
       <h1 class="flex-center">Next bet</h1>
@@ -191,6 +195,7 @@ th, td {
   font-weight: normal;
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-around;
 }
 
 button {

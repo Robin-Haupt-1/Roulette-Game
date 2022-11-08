@@ -8,7 +8,7 @@ let tableNumberRows = [
   [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]]
 
 let emit = defineEmits(["bet-placed"])
-let currentPosition:{}
+let currentPosition: {}
 let placedchip = ref()
 
 let rouletteWheel = ref()
@@ -101,7 +101,7 @@ function findChipPosition(left: number, top: number) {
       newPosition.numbers.push(tableNumberRows[cellY - 1][cellX - 1])
     }
     console.log(newPosition.numbers)
-    currentPosition=newPosition
+    currentPosition = newPosition
 
     //newPosition.numbers=[tableNumberRows[cellX][cellY]]
 
@@ -111,11 +111,7 @@ function findChipPosition(left: number, top: number) {
 }
 
 
-onMounted(() => {
-
-})
-
-function processDrawEvent(res: string, e: MouseEvent) {
+function processMouseEvent(res: string, e: MouseEvent) {
   previousX = currentX;
   previousY = currentY;
   currentX = e.clientX - table.value.getBoundingClientRect().x
@@ -163,11 +159,8 @@ function consolelog(m: string) {
 <template>
   <div id="all">
     <div ref="table" id="table_and_chip"
-         @click="(e)=>{processDrawEvent('click', e)}"
-         @mouseenter="(e)=>{processDrawEvent('enter', e)}"
-         @mousemove="(e)=>{processDrawEvent('move', e)}"
-         @mouseleave="(e)=>{processDrawEvent('leave', e)}"
-         @mousedown="(e)=>{processDrawEvent('down', e)}">
+         @click="(e)=>{processMouseEvent('click', e)}"
+         @mousemove="(e)=>{processMouseEvent('move', e)}">
       <div id="table_div"><img id="table" src="/roulette-table.jpg"/></div>
       <div id="chip" class="chip" ref="chip"><img src="/chip.png"/></div>
       <div id="placedchip" class="chip" ref="placedchip"><img src="/chip.png"/></div>
@@ -189,7 +182,7 @@ function consolelog(m: string) {
   position: relative;
   height: 360px;
   width: 720px;
-  cursor:pointer;
+  cursor: pointer;
 
 }
 
@@ -214,7 +207,7 @@ div.chip {
   width: 15px;
   top: 20px;
   left: 20px;
-  display:none;
+  display: none;
 
   img {
     position: absolute;
